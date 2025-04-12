@@ -1,15 +1,16 @@
 """
-项目的ASGI配置。
+ASGI config for MainBackend project.
 
-将ASGI可调用对象作为名为'application'的模块级变量公开。
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/5.1/howto/deployment/asgi/
 """
 
 import os
 
 from django.core.asgi import get_asgi_application
 
-# 设置默认的Django设置模块
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Shinku.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "MainBackend.settings")
 
-# 获取Django应用的ASGI应用实例
 application = get_asgi_application()

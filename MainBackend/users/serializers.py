@@ -15,6 +15,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if value == 'admin':
             raise serializers.ValidationError("不允许注册管理员账号")
         return value
+        
+    def validate(self, data):
+        user_type = data.get('user_type')
+        if user_type == 'student' and not data.get('student_id'):
+            raise serializers.ValidationError({'student_id': '学生用户必须提供学号'})
+        elif user_type == 'teacher' and not data.get('teacher_id'):
+            raise serializers.ValidationError({'teacher_id': '教师用户必须提供教工号'})
+        return data
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -32,4 +40,4 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'user_type', 'phone', 'student_id', 'teacher_id']
-        read_only_fields = ['id', 'username', 'user_type']
+        read_only_fields = ['id', 'email', 'user_type']

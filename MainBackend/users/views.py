@@ -6,6 +6,40 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import UserRegisterSerializer, UserProfileSerializer
 
+class UserLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        
+        user = get_object_or_404(User, email=email)
+        
+        if user.is_logged_in:
+            return api_response(
+                code=status.HTTP_400_BAD_REQUEST,
+                message="用户已登录，请先注销",
+                data=None
+            )
+            
+        if not user.check_password(password):
+            return api_response(
+                code=status.HTTP_400_BAD_REQUEST,
+                message="登录失败，请检查邮箱和密码",
+                data=None
+            )
+            
+        refresh = RefreshToken.for_user(user)
+        user.is_logged_in = True
+        user.save()
+        
+        return api_response(
+            data={
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }
+        )
+
 def api_response(code=200, message="success", data=None):
     return Response({
         "code": code,
@@ -41,6 +75,15 @@ class UserLogoutView(APIView):
     
     def post(self, request):
         user = request.user
+        refresh_token = request.data.get('refresh')
+        
+        if refresh_token:
+            try:
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+            except Exception:
+                pass
+                
         user.is_logged_in = False
         user.save()
         return api_response(message="注销成功")

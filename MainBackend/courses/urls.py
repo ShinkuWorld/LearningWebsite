@@ -20,4 +20,8 @@ urlpatterns = [
     path('<int:course_pk>/assignments/<int:pk>/', views.AssignmentDetailView.as_view(), name='assignment_detail'),
     path('<int:course_pk>/assignments/<int:assignment_pk>/submit/', views.AssignmentSubmitView.as_view(), name='assignment_submit'),
     path('<int:course_pk>/assignments/<int:assignment_pk>/submissions/', views.AssignmentSubmissionListView.as_view(), name='submission_list'),
+    
+    # 课程内容管理
+    path('<int:course_pk>/contents/', views.CourseContentListCreateView.as_view(), name='course_content_list_create'),
+    path('<int:course_pk>/contents/<int:pk>/', views.CourseContentDetailView.as_view(), name='course_content_detail'),
 ] + router.urls

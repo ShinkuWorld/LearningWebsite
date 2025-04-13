@@ -1,8 +1,8 @@
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Course
-from .serializers import ChapterChoiceSerializer, CourseSerializer
+from .models import Course, CourseContent
+from .serializers import ChapterChoiceSerializer, CourseSerializer, CourseContentSerializer
 
 class CourseListCreateView(generics.ListCreateAPIView):
     """
@@ -136,3 +136,26 @@ class AssignmentSubmitView(generics.CreateAPIView):
         
         # 这里可以添加作业提交逻辑
         return Response({'message': '作业提交成功'}, status=status.HTTP_201_CREATED)
+
+class CourseContentListCreateView(generics.ListCreateAPIView):
+    """
+    课程内容列表和创建API
+    """
+    queryset = CourseContent.objects.all()
+    serializer_class = CourseContentSerializer
+    
+    def get_queryset(self):
+        course_pk = self.kwargs.get('course_pk')
+        return super().get_queryset().filter(course_id=course_pk)
+
+class CourseContentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    课程内容详情、更新和删除API
+    """
+    queryset = CourseContent.objects.all()
+    serializer_class = CourseContentSerializer
+    
+    def get_object(self):
+        course_pk = self.kwargs.get('course_pk')
+        content_pk = self.kwargs.get('pk')
+        return super().get_queryset().filter(course_id=course_pk, pk=content_pk).first()

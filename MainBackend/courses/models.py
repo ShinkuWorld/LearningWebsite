@@ -2,34 +2,26 @@ from django.db import models
 from django.utils import timezone
 from users.models import User
 
+class Chapter(models.Model):
+    """课程章节模型"""
+    name = models.CharField('章节名称', max_length=100)
+    description = models.TextField('章节描述', blank=True)
+    order = models.PositiveIntegerField('排序', default=1)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '课程章节'
+        verbose_name_plural = verbose_name
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
 class Course(models.Model):
     STATUS_CHOICES = (
         ('active', '进行中'),
         ('archived', '已结束')
     )
-    CHAPTER_CHOICES = (
-        ('basic', '基础知识'),
-        ('data_structure', '数据结构'),
-        ('algorithm', '算法'),
-        ('advanced', '高级主题'),
-    )
-    
-    @classmethod
-    def add_chapter_choice(cls, value, display):
-        """添加新的章节分类选项"""
-        if not hasattr(cls, '_chapter_choices_cache'):
-            cls._chapter_choices_cache = dict(cls.CHAPTER_CHOICES)
-        cls._chapter_choices_cache[value] = display
-        cls.CHAPTER_CHOICES = tuple(cls._chapter_choices_cache.items())
-    
-    @classmethod
-    def remove_chapter_choice(cls, value):
-        """删除章节分类选项"""
-        if not hasattr(cls, '_chapter_choices_cache'):
-            cls._chapter_choices_cache = dict(cls.CHAPTER_CHOICES)
-        if value in cls._chapter_choices_cache:
-            del cls._chapter_choices_cache[value]
-            cls.CHAPTER_CHOICES = tuple(cls._chapter_choices_cache.items())
 
     name = models.CharField('课程名称', max_length=100)
     teacher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='teaching_courses', limit_choices_to={'user_type': 'teacher'})
@@ -37,7 +29,7 @@ class Course(models.Model):
     created_at = models.DateTimeField('创建时间', auto_now_add=True)
     students = models.ManyToManyField(User, related_name='enrolled_courses', limit_choices_to={'user_type': 'student'})
     status = models.CharField('课程状态', max_length=10, choices=STATUS_CHOICES, default='active')
-    chapter = models.CharField('章节分类', max_length=20, choices=CHAPTER_CHOICES, default='basic')
+    chapters = models.ManyToManyField(Chapter, related_name='courses', verbose_name='课程章节')
 
     def archive_course(self):
         """归档课程及其相关作业"""
@@ -106,6 +98,22 @@ class GradeHistory(models.Model):
 
     def __str__(self):
         return f'{self.submission} - {self.score}分 - {self.graded_at}'
+
+class CourseContent(models.Model):
+    """课程内容模型"""
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='contents')
+    title = models.CharField('章节标题', max_length=100)
+    content = models.TextField('章节内容')
+    order = models.PositiveIntegerField('排序', default=1)
+    created_at = models.DateTimeField('创建时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '课程内容'
+        verbose_name_plural = verbose_name
+        ordering = ['order']
+
+    def __str__(self):
+        return self.title
 
 class AssignmentSubmission(models.Model):
     STATUS_CHOICES = (

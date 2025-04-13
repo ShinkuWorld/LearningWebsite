@@ -45,13 +45,16 @@
   | email | string | 是 | 邮箱地址 |
   | password | string | 是 | 密码 |
   | user_type | string | 是 | 用户类型(teacher/student)，不允许注册管理员账号 |
+  | student_id | string | 条件必填 | 学号，当user_type为student时必填 |
+  | teacher_id | string | 条件必填 | 教工号，当user_type为teacher时必填 |
 - **请求示例**:
   ```json
   {
     "username": "testuser",
     "email": "test@example.com",
     "password": "password123",
-    "user_type": "student"
+    "user_type": "student",
+    "student_id": "2024001"
   }
   ```
 - **响应示例**:
@@ -63,7 +66,8 @@
       "id": 1,
       "username": "testuser",
       "email": "test@example.com",
-      "user_type": "student"
+      "user_type": "student",
+      "student_id": "2024001"
     }
   }
   ```
@@ -156,13 +160,15 @@
 - **请求体参数**:
   | 参数名 | 类型 | 必填 | 描述 |
   |--------|------|------|------|
-  | email | string | 是 | 新邮箱地址 |
-  | password | string | 是 | 新密码 |
+  | username | string | 否 | 新用户名 |
+  | password | string | 否 | 新密码 |
+  | phone | string | 否 | 新手机号 |
 - **请求体示例**:
   ```json
   {
-    "email": "new@example.com",
-    "password": "new_password"
+    "username": "new_username",
+    "password": "new_password",
+    "phone": "13800138000"
   }
   ```
 - **响应**：
@@ -172,25 +178,68 @@
     "message": "更新成功",
     "data": {
       "id": 1,
-      "username": "string",
-      "email": "new@example.com"
+      "username": "new_username",
+      "email": "user@example.com",
+      "phone": "13800138000"
     }
   }
   ```
+- **说明**：
+  - 邮箱地址不可更改
+  - 可以只更新部分字段，不需要同时更新所有字段
 
 ## 3. 课程管理接口
 
 ### 3.1 创建课程
 - **接口**：`POST /courses/`
 - **请求头**：`Authorization: Bearer <access_token>`
-- **请求体**：
+- **请求体参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  |--------|------|------|------|
+  | name | string | 是 | 课程名称 |
+  | description | string | 否 | 课程描述 |
+  | teacher | integer | 是 | 教师ID |
+  | chapters | array | 否 | 课程章节ID列表 |
+  | status | string | 否 | 课程状态(active/archived)，默认active |
+- **请求体示例**:
   ```json
   {
-    "title": "课程标题",
-    "description": "课程描述",
-    "chapter": "章节编号"
+    "name": "Python编程",
+    "description": "Python基础课程",
+    "teacher_id": 1,
+    "chapter": "basic"
   }
   ```
+- **响应示例**:
+  ```json
+  {
+    "code": 201,
+    "message": "创建成功",
+    "data": {
+      "id": 1,
+      "name": "Python编程",
+      "teacher": {
+        "id": 1,
+        "username": "teacher1",
+        "user_type": "teacher"
+      },
+      "description": "Python基础课程",
+      "created_at": "2023-01-01T00:00:00Z",
+      "students": [],
+      "student_count": 0,
+      "chapter": "basic",
+      "chapter_display": "基础课程"
+    }
+  }
+  
+- **错误码**:
+  | 错误码 | 说明 |
+  |--------|------|
+  | 400 | 参数错误 |
+  | 401 | 未授权 |
+  | 403 | 权限不足 |
+    "chapter": "章节编号"
+  
 - **响应**：
   ```json
   {
@@ -216,8 +265,8 @@
   - `page`: 页码（默认1）
   - `size`: 每页数量（默认10）
   - `search`: 搜索关键词
-  - `chapter`: 按章节筛选
-  - `ordering`: 排序字段（created_at/chapter）
+  - `status`: 课程状态筛选(active/archived)
+  - `ordering`: 排序字段（created_at/-created_at）
 - **响应**：
   ```json
   {
@@ -302,20 +351,132 @@
   }
   ```
 
-## 4. 课程内容管理接口
+## 4. 课程章节管理接口
 
-### 4.1 添加课程内容
-- **接口**：`POST /courses/{course_id}/contents/`
+### 4.1 创建章节
+- **接口**：`POST /chapters/`
 - **请求头**：`Authorization: Bearer <access_token>`
-- **请求体**：
+- **请求体参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  |--------|------|------|------|
+  | name | string | 是 | 章节名称 |
+  | description | string | 否 | 章节描述 |
+  | order | integer | 否 | 排序序号，默认1 |
+- **响应示例**:
   ```json
   {
-    "title": "章节标题",
-    "content": "章节内容",
-    "order": 1
+    "code": 200,
+    "message": "创建成功",
+    "data": {
+      "id": 1,
+      "name": "第一章",
+      "description": "章节描述",
+      "order": 1,
+      "created_at": "2024-03-20T10:00:00Z"
+    }
   }
   ```
+
+### 4.2 获取章节列表
+- **接口**：`GET /chapters/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **响应示例**:
+  ```json
+  {
+    "code": 200,
+    "message": "成功",
+    "data": [
+      {
+        "id": 1,
+        "name": "第一章",
+        "description": "章节描述",
+        "order": 1,
+        "created_at": "2024-03-20T10:00:00Z"
+      }
+    ]
+  }
+  ```
+
+### 4.3 更新章节
+- **接口**：`PUT /chapters/{id}/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **请求体参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  |--------|------|------|------|
+  | name | string | 否 | 章节名称 |
+  | description | string | 否 | 章节描述 |
+  | order | integer | 否 | 排序序号 |
+
+### 4.4 删除章节
+- **接口**：`DELETE /chapters/{id}/`
+- **请求头**：`Authorization: Bearer <access_token>`
 - **响应**：
+  ```json
+  {
+    "code": 200,
+    "message": "删除成功"
+  }
+  ```
+
+## 5. 课程内容管理接口
+
+### 5.1 获取课程内容列表
+- **接口**：`GET /courses/{course_id}/contents/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **请求参数**：
+  - `page`: 页码（默认1）
+  - `size`: 每页数量（默认10）
+  - `order`: 排序字段（created_at/order）
+- **响应**：
+  ```json
+  {
+    "code": 200,
+    "message": "成功",
+    "data": {
+      "total": 10,
+      "pages": 1,
+      "current_page": 1,
+      "items": [
+        {
+          "id": 1,
+          "title": "章节标题",
+          "content": "章节内容",
+          "order": 1,
+          "created_at": "2024-03-20T10:00:00Z"
+        }
+      ]
+    }
+  }
+  ```
+
+### 5.2 获取课程内容详情
+- **接口**：`GET /courses/{course_id}/contents/{content_id}/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **响应**：
+  ```json
+  {
+    "code": 200,
+    "message": "成功",
+    "data": {
+      "id": 1,
+      "title": "章节标题",
+      "content": "章节内容",
+      "order": 1,
+      "created_at": "2024-03-20T10:00:00Z"
+    }
+  }
+  ```
+
+### 5.3 添加课程内容
+- **接口**：`POST /courses/{course_id}/contents/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **请求体参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  |--------|------|------|------|
+  | title | string | 是 | 章节标题 |
+  | content | string | 是 | 章节内容 |
+  | order | integer | 否 | 排序序号，默认1 |
+- **响应示例**：
   ```json
   {
     "code": 200,
@@ -330,18 +491,16 @@
   }
   ```
 
-### 4.2 更新课程内容
+### 5.4 更新课程内容
 - **接口**：`PUT /courses/{course_id}/contents/{content_id}/`
 - **请求头**：`Authorization: Bearer <access_token>`
-- **请求体**：
-  ```json
-  {
-    "title": "新章节标题",
-    "content": "新章节内容",
-    "order": 2
-  }
-  ```
-- **响应**：
+- **请求体参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  |--------|------|------|------|
+  | title | string | 否 | 章节标题 |
+  | content | string | 否 | 章节内容 |
+  | order | integer | 否 | 排序序号 |
+- **响应示例**：
   ```json
   {
     "code": 200,
@@ -356,7 +515,18 @@
   }
   ```
 
-## 5. 错误码说明
+### 5.5 删除课程内容
+- **接口**：`DELETE /courses/{course_id}/contents/{content_id}/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **响应示例**：
+  ```json
+  {
+    "code": 200,
+    "message": "删除成功"
+  }
+  ```
+
+## 6. 错误码说明
 
 | 错误码 | 说明 |
 |--------|------|

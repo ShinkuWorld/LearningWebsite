@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, CourseResource, Assignment, AssignmentSubmission, GradeHistory
+from .models import Course, CourseResource, Assignment, AssignmentSubmission, GradeHistory, CourseContent, Chapter
 
 
 @admin.register(Course)
@@ -40,3 +40,18 @@ class GradeHistoryAdmin(admin.ModelAdmin):
     list_filter = ('graded_at',)
     search_fields = ('submission__assignment__title', 'graded_by__username')
     raw_id_fields = ('submission', 'graded_by')
+
+
+@admin.register(CourseContent)
+class CourseContentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'course', 'order', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('title', 'course__name')
+    raw_id_fields = ('course',)
+
+
+@admin.register(Chapter)
+class ChapterAdmin(admin.ModelAdmin):
+    list_display = ('name', 'order', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('name',)

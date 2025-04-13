@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Course, CourseResource, Assignment, AssignmentSubmission
+from .models import Course, CourseResource, Assignment, AssignmentSubmission, CourseContent
 from users.models import User
 
 class UserBriefSerializer(serializers.ModelSerializer):
@@ -24,7 +24,9 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['id', 'name', 'teacher', 'description', 'created_at', 'students', 'student_count', 'chapter', 'chapter_display', 'teacher_id']
         extra_kwargs = {
-            'chapter': {'required': False}
+            'chapter': {'required': False},
+            'name': {'required': True},
+            'students': {'required': False}
         }
 
     def get_chapter_display(self, obj):
@@ -80,3 +82,9 @@ class AssignmentSubmissionSerializer(serializers.ModelSerializer):
         else:
             validated_data['status'] = 'pending'
         return super().create(validated_data)
+
+class CourseContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseContent
+        fields = ['id', 'course', 'title', 'content', 'order', 'created_at']
+        read_only_fields = ['course', 'created_at']

@@ -1,7 +1,8 @@
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, pagination
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Course, CourseContent
+from rest_framework.permissions import IsAdminUser
+from .models import Course, CourseContent, Chapter
 from .serializers import ChapterChoiceSerializer, CourseSerializer, CourseContentSerializer
 
 class CourseListCreateView(generics.ListCreateAPIView):
@@ -18,34 +19,41 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
-class ChapterViewSet(viewsets.ViewSet):
+from rest_framework.permissions import AllowAny
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+
+class ChapterViewSet(viewsets.ModelViewSet):
     """
-    课程分类管理API
+    课程章节管理API，仅管理员可访问
     """
+    queryset = Chapter.objects.all()
+    serializer_class = ChapterChoiceSerializer
+    permission_classes = [IsAdminUser]
+    pagination_class = pagination.PageNumberPagination
     
     def list(self, request):
-        """获取所有课程分类选项"""
-        choices = [{'value': value, 'display': display} for value, display in Course.CHAPTER_CHOICES]
-        serializer = ChapterChoiceSerializer(choices, many=True)
+        """获取所有课程章节"""
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
     def create(self, request):
-        """添加新的课程分类选项"""
-        serializer = ChapterChoiceSerializer(data=request.data)
+        """创建新的课程章节"""
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            value = serializer.validated_data['value']
-            display = serializer.validated_data['display']
-            Course.add_chapter_choice(value, display)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, pk=None):
-        """删除课程分类选项"""
-        value = request.data.get('value')
-        if not value:
-            return Response({'error': 'value参数是必须的'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        Course.remove_chapter_choice(value)
+        """删除课程章节"""
+        chapter = self.get_object()
+        chapter.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CourseEnrollView(generics.CreateAPIView):

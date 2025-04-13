@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from .models import Course, CourseResource, Assignment, AssignmentSubmission, CourseContent
+from .models import Course, CourseResource, Assignment, AssignmentSubmission, CourseContent, Chapter
 from users.models import User
 
 class UserBriefSerializer(serializers.ModelSerializer):
@@ -22,11 +22,11 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'name', 'teacher', 'description', 'created_at', 'students', 'student_count', 'chapter', 'chapter_display', 'teacher_id']
+        fields = ['id', 'name', 'teacher', 'description', 'created_at', 'students', 'student_count', 'chapters', 'teacher_id']
         extra_kwargs = {
-            'chapter': {'required': False},
             'name': {'required': True},
-            'students': {'required': False}
+            'students': {'required': False},
+            'chapters': {'required': False}
         }
 
     def get_chapter_display(self, obj):
@@ -47,9 +47,16 @@ class CourseResourceSerializer(serializers.ModelSerializer):
             'resource_type': {'required': False}
         }
 
-class ChapterChoiceSerializer(serializers.Serializer):
-    value = serializers.CharField()
-    display = serializers.CharField()
+class ChapterChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chapter
+        fields = ['id', 'name', 'description', 'order', 'created_at']
+        read_only_fields = ['created_at']
+        extra_kwargs = {
+            'name': {'required': True},
+            'description': {'required': False},
+            'order': {'required': False}
+        }
 
 class AssignmentSerializer(serializers.ModelSerializer):
     submission_count = serializers.SerializerMethodField()

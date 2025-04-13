@@ -238,26 +238,34 @@
   | 400 | 参数错误 |
   | 401 | 未授权 |
   | 403 | 权限不足 |
-    "chapter": "章节编号"
+    "chapter_id": "章节编号"
   
-- **响应**：
+- **响应示例**:
   ```json
   {
-    "code": 200,
+    "code": 201,
     "message": "创建成功",
     "data": {
       "id": 1,
-      "title": "课程标题",
-      "description": "课程描述",
-      "chapter": "章节编号",
+      "name": "Python编程",
+      "description": "Python基础课程",
+      "chapter_id": 1,
       "teacher": {
         "id": 1,
-        "username": "teacher"
+        "username": "teacher1",
+        "user_type": "teacher"
       },
-      "created_at": "2024-03-20T10:00:00Z"
+      "created_at": "2023-01-01T00:00:00Z",
+      "student_count": 0
     }
   }
   ```
+- **错误码**:
+  | 错误码 | 说明 |
+  |--------|------|
+  | 400 | 参数错误 |
+  | 401 | 未授权 |
+  | 403 | 权限不足 |
 
 ### 3.2 获取课程列表
 - **接口**：`GET /courses/`
@@ -353,8 +361,45 @@
 
 ## 4. 课程章节管理接口
 
-### 4.1 创建章节
-- **接口**：`POST /chapters/`
+### 4.1 获取章节列表
+- **接口**：`GET /api/courses/chapters/`
+- **请求头**：`Authorization: Bearer <access_token>`
+- **请求参数**：
+  - `page`: 页码（默认1）
+  - `size`: 每页数量（默认10）
+  - `search`: 搜索关键词（搜索name和description字段）
+  - `ordering`: 排序字段（order/-order/created_at/-created_at）
+- **响应示例**:
+  ```json
+  {
+    "code": 200,
+    "message": "成功",
+    "data": {
+      "total": 10,
+      "pages": 1,
+      "current_page": 1,
+      "items": [
+        {
+          "id": 1,
+          "name": "基础课程",
+          "description": "课程基础内容",
+          "order": 1,
+          "created_at": "2024-03-20T10:00:00Z"
+        },
+        {
+          "id": 2,
+          "name": "进阶课程",
+          "description": "课程进阶内容",
+          "order": 2,
+          "created_at": "2024-03-20T10:00:00Z"
+        }
+      ]
+    }
+  }
+  ```
+
+### 4.2 创建章节
+- **接口**：`POST /api/courses/chapters/`
 - **请求头**：`Authorization: Bearer <access_token>`
 - **请求体参数**:
   | 参数名 | 类型 | 必填 | 描述 |
@@ -365,40 +410,19 @@
 - **响应示例**:
   ```json
   {
-    "code": 200,
+    "code": 201,
     "message": "创建成功",
     "data": {
       "id": 1,
-      "name": "第一章",
-      "description": "章节描述",
-      "order": 1,
-      "created_at": "2024-03-20T10:00:00Z"
+      "name": "基础课程",
+      "description": "课程基础内容",
+      "order": 1
     }
   }
   ```
 
-### 4.2 获取章节列表
-- **接口**：`GET /chapters/`
-- **请求头**：`Authorization: Bearer <access_token>`
-- **响应示例**:
-  ```json
-  {
-    "code": 200,
-    "message": "成功",
-    "data": [
-      {
-        "id": 1,
-        "name": "第一章",
-        "description": "章节描述",
-        "order": 1,
-        "created_at": "2024-03-20T10:00:00Z"
-      }
-    ]
-  }
-  ```
-
 ### 4.3 更新章节
-- **接口**：`PUT /chapters/{id}/`
+- **接口**：`PUT /api/courses/chapters/{id}/`
 - **请求头**：`Authorization: Bearer <access_token>`
 - **请求体参数**:
   | 参数名 | 类型 | 必填 | 描述 |
@@ -406,11 +430,24 @@
   | name | string | 否 | 章节名称 |
   | description | string | 否 | 章节描述 |
   | order | integer | 否 | 排序序号 |
+- **响应示例**:
+  ```json
+  {
+    "code": 200,
+    "message": "更新成功",
+    "data": {
+      "id": 1,
+      "name": "基础课程（更新）",
+      "description": "更新后的课程描述",
+      "order": 2
+    }
+  }
+  ```
 
 ### 4.4 删除章节
-- **接口**：`DELETE /chapters/{id}/`
+- **接口**：`DELETE /api/courses/chapters/{id}/`
 - **请求头**：`Authorization: Bearer <access_token>`
-- **响应**：
+- **响应示例**：
   ```json
   {
     "code": 200,
